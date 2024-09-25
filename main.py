@@ -102,12 +102,20 @@ def handle_pull_request(payload):
 
     try:
         latest_commit = list(pull_request.get_commits())[-1]
-        pull_request.create_review(
-            commit=latest_commit,
-            body="I've reviewed the changes and left specific comments. Please check the individual file changes for detailed feedback.",
-            event="COMMENT",
-            comments=review_comments
-        )
+        # pull_request.create_review(
+        #     commit=latest_commit,
+        #     body="I've reviewed the changes and left specific comments. Please check the individual file changes for detailed feedback.",
+        #     event="COMMENT",
+        #     comments=review_comments
+        # )
+        # for comment in review_comments:
+        #     print(f"Posting review comment on {comment['path']} line {comment['line']}: {comment['body']}")
+        #     pull_request.create_review_comment(
+        #         commit=latest_commit,
+        #         path=comment['path'],
+        #         line=comment['line'],
+        #         body=comment['body']
+        #     )
         print(f"Posted review with {len(review_comments)} comments")
     except GithubException as e:
         print(f"GitHub API error: {e.status} - {e.data}")
