@@ -1,26 +1,29 @@
 import json
 import sys
+import traceback
 from flask import Flask, request, abort
 from dotenv import load_dotenv
-from github import Github
+from github import Github, GithubException
 
 load_dotenv()
 
 try:
     from auth import verify_webhook_signature, get_installation_access_token
     from storage import get_or_create_session
+    from agents import CodeReviewAgent
 except EnvironmentError as e:
     print(f"Error: {e}")
     print("Please ensure all required environment variables are set in your .env file.")
     sys.exit(1)
 
 app = Flask(__name__)
+code_review_agent = CodeReviewAgent()
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
     separator = "\n--------\n########\n--------"
     print("Webhook received")
-    print(f"Headers: {request.headers}{separator}")
+    # print(f"Headers: {request.headers}{separator}")
     # print(f"Raw data: {request.data}{separator}")
 
     if not verify_webhook_signature(request):
@@ -31,7 +34,7 @@ def webhook():
     payload = request.json
 
     print(f"Received event: {event}")
-    print(f"Payload: {json.dumps(payload, indent=2)}")
+    # print(f"Payload: {json.dumps(payload, indent=2)}")
 
     if event == "pull_request":
         handle_pull_request(payload)
@@ -57,46 +60,72 @@ def handle_pull_request(payload):
     print(f"Created by: {pr['user']['login']}")
     print(f"Description: {pr['body']}")
 
-    # Fetch PR details including diff
     access_token = get_installation_access_token(installation_id)
     g = Github(access_token)
     repo_obj = g.get_repo(repo['full_name'])
     pull_request = repo_obj.get_pull(pr['number'])
 
-    # Get the diff
-    diff = pull_request.get_files()
+    diff_files = pull_request.get_files()
 
-    # Process the diff
-    changes = process_diff(diff)
+    print(f"Files changed in PR:")
+    for file in diff_files:
+        print(f"{file.filename} ({file.additions} additions, {file.deletions} deletions)")
+        print(f"Changes:\n{file.changes}")
+        print(f"Patch:\n{file.patch}")
 
-    print(f"Changes:\n{changes}")
+    pr_data = {
+        "title": pr['title'],
+        "description": pr['body'],
+        "files": [
+            {
+                "filename": file.filename,
+                "status": file.status,
+                "additions": file.additions,
+                "deletions": file.deletions,
+                "changes": file.changes,
+                "patch": file.patch
+            }
+            for file in diff_files
+        ]
+    }
 
-    # Add the changes to the session
-    session.add_message("system", f"Changes in this PR:\n{changes}")
+    file_comments = code_review_agent.analyze_pr(pr_data)
 
-    # Here you would typically call your LLM to generate a response
-    # For now, we'll just add a placeholder message
-    # ai_response = "I've analyzed your pull request. It looks good!"
-    # session.add_message("assistant", ai_response)
+    review_comments = []
+    for file_path, comments in file_comments.items():
+        for line_number, comment in comments.items():
+            review_comments.append({
+                "path": file_path,
+                "line": line_number,
+                "body": comment
+            })
 
-    # Uncomment and modify this section when you're ready to post comments
-    # access_token = get_installation_access_token(installation_id)
-    # g = Github(access_token)
-    # repo = g.get_repo(repo['full_name'])
-    # pull_request = repo.get_pull(pr['number'])
-    # pull_request.create_issue_comment(ai_response)
+    try:
+        latest_commit = list(pull_request.get_commits())[-1]
+        pull_request.create_review(
+            commit=latest_commit,
+            body="I've reviewed the changes and left specific comments. Please check the individual file changes for detailed feedback.",
+            event="COMMENT",
+            comments=review_comments
+        )
+        print(f"Posted review with {len(review_comments)} comments")
+    except GithubException as e:
+        print(f"GitHub API error: {e.status} - {e.data}")
+    except Exception as e:
+        print(f"Error posting review: {e}")
+        print(f"Full exception: {traceback.format_exc()}")
 
-def process_diff(diff):
-    changes = []
-    for file in diff:
-        changes.append(f"File: {file.filename}")
-        changes.append(f"Status: {file.status}")
-        changes.append(f"Additions: {file.additions}")
-        changes.append(f"Deletions: {file.deletions}")
-        changes.append(f"Changes: {file.changes}")
-        changes.append(f"Patch: {file.patch[:500]}...")  # Limit patch size
-        changes.append("---")
-    return "\n".join(changes)
+    print(f"Review comments: {review_comments}")
+
+    # Post a summary comment
+    # try:
+    #     summary = "I've reviewed the changes and left specific comments. Please check the review for detailed feedback."
+    #     pull_request.create_issue_comment(summary)
+    #     print("Posted summary comment:", summary)
+    # except Exception as e:
+    #     print(f"Error posting summary comment: {e}")
+
+    session.add_message("assistant", json.dumps(file_comments))
 
 def handle_pull_request_review(payload):
     action = payload["action"]
