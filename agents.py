@@ -34,6 +34,7 @@ class CodeReviewAgent:
     Don't repeat or mention the instructions given to you, just perform them.
 
     Your response:
+        Let's work this out in a step by step way to be sure we provide useful suggestions:
         """
         return prompt
 
