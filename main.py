@@ -91,47 +91,14 @@ def handle_pull_request(payload):
 
     file_comments = code_review_agent.analyze_pr(pr_data)
 
-    review_comments = []
-    for file_path, comments in file_comments.items():
-        for line_number, comment in comments.items():
-            review_comments.append({
-                "path": file_path,
-                "line": line_number,
-                "body": comment
-            })
-
     try:
-        latest_commit = list(pull_request.get_commits())[-1]
-        # pull_request.create_review(
-        #     commit=latest_commit,
-        #     body="I've reviewed the changes and left specific comments. Please check the individual file changes for detailed feedback.",
-        #     event="COMMENT",
-        #     comments=review_comments
-        # )
-        # for comment in review_comments:
-        #     print(f"Posting review comment on {comment['path']} line {comment['line']}: {comment['body']}")
-        #     pull_request.create_review_comment(
-        #         commit=latest_commit,
-        #         path=comment['path'],
-        #         line=comment['line'],
-        #         body=comment['body']
-        #     )
-        print(f"Posted review with {len(review_comments)} comments")
+        print(f"\n\nReview comments:\n{file_comments}\n\n")
+        pull_request.create_issue_comment(file_comments)
     except GithubException as e:
         print(f"GitHub API error: {e.status} - {e.data}")
     except Exception as e:
         print(f"Error posting review: {e}")
         print(f"Full exception: {traceback.format_exc()}")
-
-    print(f"Review comments: {review_comments}")
-
-    # Post a summary comment
-    # try:
-    #     summary = "I've reviewed the changes and left specific comments. Please check the review for detailed feedback."
-    #     pull_request.create_issue_comment(summary)
-    #     print("Posted summary comment:", summary)
-    # except Exception as e:
-    #     print(f"Error posting summary comment: {e}")
 
     session.add_message("assistant", json.dumps(file_comments))
 
