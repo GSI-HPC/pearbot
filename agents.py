@@ -6,12 +6,12 @@ class CodeReviewAgent:
 
     def analyze_pr(self, pr_data):
         print(f"Analyzing PR with {len(pr_data['files'])} files...")
-        file_prompt = self._prepare_file_prompt(pr_data['files'], pr_data['existing_comments'])
+        file_prompt = self._prepare_file_prompt(pr_data['title'], pr_data['description'], pr_data['files'])
         print(f"REQUEST:\n{file_prompt}\nENDOFREQUEST")
         response = ollama.generate(model=self.model_name, prompt=file_prompt)['response']
         return response
 
-    def _prepare_file_prompt(self, files, existing_comments):
+    def _prepare_file_prompt(self, title, description, files):
         file_changes = []
         for file in files:
             file_changes.append(f"""
@@ -25,7 +25,16 @@ class CodeReviewAgent:
         all_file_changes = "\n---\n".join(file_changes)
 
         prompt = f"""
-    Please analyze the following file changes in a Pull Request:
+    You are an experienced software engineer tasked with reviewing the following Pull Request.
+
+    ---
+    Pull Request title: {title}
+    Pull Request description:
+{description}
+    ---
+
+    Analyze the following file changes:
+
 {all_file_changes}
 
     Please provide specific comments only for changed lines (additions or deletions), where you see potential issues, improvements or suggestions for the developer.
@@ -34,15 +43,6 @@ class CodeReviewAgent:
     Don't repeat or mention the instructions given to you, just perform them.
 
     Your response:
-        Let's work this out in a step by step way to be sure we provide useful suggestions:
+        Let's work this out in a step by step way to be sure we provide only useful suggestions:
         """
         return prompt
-
-    # def _summarize_existing_comments(self, comments):
-    #     summary = []
-    #     for comment in comments:
-    #         if comment['type'] == 'issue_comment':
-    #             summary.append(f"Issue comment by {comment['user']}: {comment['body'][:300]}...")
-    #         else:  # review_comment
-    #             summary.append(f"Review comment by {comment['user']} on {comment['path']}: {comment['body'][:300]}...")
-    #     return "\n".join(summary)

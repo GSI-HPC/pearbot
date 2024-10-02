@@ -63,7 +63,6 @@ def perform_review(pr_number, repo_full_name, installation_id):
     pull_request = repo_obj.get_pull(pr_number)
 
     diff_files = pull_request.get_files()
-    existing_comments = "" # get_existing_comments(pull_request)
 
     pr_data = {
         "title": pull_request.title,
@@ -78,8 +77,7 @@ def perform_review(pr_number, repo_full_name, installation_id):
                 "patch": file.patch
             }
             for file in diff_files
-        ],
-        "existing_comments": existing_comments
+        ]
     }
 
     review_comments = code_review_agent.analyze_pr(pr_data)
@@ -95,32 +93,6 @@ def perform_review(pr_number, repo_full_name, installation_id):
 
     session = get_or_create_session(pr_number, repo_full_name)
     session.add_message("assistant", json.dumps(review_comments))
-
-def get_existing_comments(pull_request):
-    comments = pull_request.get_issue_comments()
-    review_comments = pull_request.get_comments()
-
-    existing_comments = []
-
-    for comment in comments:
-        existing_comments.append({
-            "type": "issue_comment",
-            "user": comment.user.login,
-            "body": comment.body,
-            "created_at": comment.created_at.isoformat()
-        })
-
-    for comment in review_comments:
-        existing_comments.append({
-            "type": "review_comment",
-            "user": comment.user.login,
-            "body": comment.body,
-            "path": comment.path,
-            "position": comment.position,
-            "created_at": comment.created_at.isoformat()
-        })
-
-    return existing_comments
 
 if __name__ == "__main__":
     app.run(host="localhost", port=3000)
