@@ -24,7 +24,6 @@ feedback_improver_agent = Agent(role="feedback_improver")
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
-    separator = "\n--------\n########\n--------"
     print("Webhook received")
 
     if not verify_webhook_signature(request):
@@ -71,23 +70,23 @@ def perform_review(pr_number, repo_full_name, installation_id):
     }
 
     initial_reviews = []
+    review_models = ["llama3.1", "codellama", "codestral"]
 
     for i in range(NUM_INITIAL_REVIEWS):
-        initial_review = code_review_agent.analyze(pr_data)
+        _, initial_review = code_review_agent.analyze(pr_data, review_models[i])
         initial_reviews.append(initial_review)
-        print(f"\n\nInitial review {i+1}:\n{initial_review}\n\n")
-
-    initial_review = code_review_agent.analyze(pr_data)
+        print(f"\n\n >>> Requesting initial review {i+1} (with {review_models[i]})...")
 
     improvement_data = {
         "pr_data": pr_data,
         "initial_reviews": initial_reviews
     }
-    improved_feedback = feedback_improver_agent.analyze(improvement_data)
+    print(f"\n\n >>> Requesting improved review (with llama3.1)...\n\n")
+    improver_prompt, improved_feedback = feedback_improver_agent.analyze(improvement_data, "llama3.1")
 
     try:
         print(f"\n\nPosting improved feedback:\n{improved_feedback}\n\n")
-        # pull_request.create_issue_comment(f"Code Review Feedback:\n\n{improved_feedback}")
+        pull_request.create_issue_comment(f"Code Review Feedback:\n\n{improved_feedback}")
     except GithubException as e:
         print(f"GitHub API error: {e.status} - {e.data}")
     except Exception as e:
@@ -96,7 +95,7 @@ def perform_review(pr_number, repo_full_name, installation_id):
 
     session = get_or_create_session(pr_number, repo_full_name)
     session.add_message("assistant", json.dumps({
-        "initial_review": initial_review,
+        "initial_reviews": initial_reviews,
         "improved_feedback": improved_feedback
     }))
 
