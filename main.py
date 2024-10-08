@@ -66,7 +66,8 @@ def perform_review(pr_number, repo_full_name, installation_id):
     pr_data = {
         "title": pull_request.title,
         "description": pull_request.body,
-        "changes": changes
+        "changes": changes,
+        "context": ""
     }
 
     initial_reviews = []

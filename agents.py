@@ -54,6 +54,7 @@ class Agent:
             raise ValueError(f"Unknown role: {self.role}")
 
     def _prepare_code_review_prompt(self, pr_data):
+        context = f"Additional Context:\n{pr_data['context']}" if pr_data.get('context') else ""
         prompt = f"""
     You are an experienced software engineer tasked with reviewing the following Pull Request.
 
@@ -66,6 +67,8 @@ class Agent:
     Analyze the following file changes:
 
 {pr_data['changes']}
+
+    {context}
 
     Please provide specific comments only for changed lines (additions or deletions), where you see potential issues, improvements or suggestions for the developer.
     Take into account the existing comments and avoid repeating already mentioned points.
