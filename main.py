@@ -87,7 +87,7 @@ def perform_review(pr_number, repo_full_name, installation_id):
 
     try:
         print(f"\n\nPosting improved feedback:\n{improved_feedback}\n\n")
-        pull_request.create_issue_comment(f"Code Review Feedback:\n\n{improved_feedback}")
+        # pull_request.create_issue_comment(f"Code Review Feedback:\n\n{improved_feedback}")
     except GithubException as e:
         print(f"GitHub API error: {e.status} - {e.data}")
     except Exception as e:
