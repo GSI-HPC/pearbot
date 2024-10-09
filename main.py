@@ -1,6 +1,7 @@
 import json
 import sys
 import traceback
+import argparse
 from flask import Flask, request, abort
 from dotenv import load_dotenv
 from github import Github, GithubException
@@ -8,6 +9,7 @@ from github import Github, GithubException
 load_dotenv()
 
 NUM_INITIAL_REVIEWS = 3
+REVIEW_MODELS = ["llama3.1", "codellama", "codestral"]
 
 try:
     from auth import verify_webhook_signature, get_installation_access_token
@@ -71,11 +73,10 @@ def perform_review(pr_number, repo_full_name, installation_id):
     }
 
     initial_reviews = []
-    review_models = ["llama3.1", "codellama", "codestral"]
 
     for i in range(NUM_INITIAL_REVIEWS):
-        print(f"\n\n >>> Requesting initial review {i+1} (with {review_models[i]})...")
-        _, initial_review = code_review_agent.analyze(pr_data, review_models[i])
+        print(f"\n\n >>> Requesting initial review {i+1} (with {REVIEW_MODELS[i]})...")
+        _, initial_review = code_review_agent.analyze(pr_data, REVIEW_MODELS[i])
         initial_reviews.append(initial_review)
 
     improvement_data = {
@@ -114,5 +115,60 @@ def file_changes_as_string(files):
 """)
     return "\n---\n".join(file_changes)
 
+def analyze_diff(diff_content):
+    pr_data = {
+        "title": "Local Diff Analysis",
+        "description": "Analyzing a local diff file or stdin input",
+        "changes": diff_content,
+        "context": ""
+    }
+
+    initial_reviews = []
+    for i in range(NUM_INITIAL_REVIEWS):
+        print(f"\n\n >>> Requesting initial review {i+1} (with {REVIEW_MODELS[i]})...")
+        _, initial_review = code_review_agent.analyze(pr_data, REVIEW_MODELS[i])
+        initial_reviews.append(initial_review)
+
+    improvement_data = {
+        "pr_data": pr_data,
+        "initial_reviews": initial_reviews
+    }
+
+    print(f"\n\n >>> Requesting improved review (with llama3.1)...\n\n")
+    _, improved_feedback = feedback_improver_agent.analyze(improvement_data, "llama3.1")
+
+    print(f"\n\nImproved feedback:\n{improved_feedback}\n\n")
+
+def main():
+    parser = argparse.ArgumentParser(description="Code Review Script")
+    parser.add_argument("--server", action="store_true", help="Run as a server")
+    parser.add_argument("--diff", type=str, nargs='?', const='-', help="Path to the diff file or '-' for stdin")
+    parser.add_argument("--additional-arg", type=str, help="An example of an additional argument")
+
+    args = parser.parse_args()
+
+    if args.server:
+        print("Running as a server...")
+        app.run(host="localhost", port=3000)
+    elif args.diff or not sys.stdin.isatty():
+        if args.diff == '-' or not sys.stdin.isatty():
+            print("Reading diff from stdin...")
+            diff_content = sys.stdin.read()
+        elif args.diff:
+            print(f"Reading diff from file: {args.diff}")
+            with open(args.diff, 'r') as file:
+                diff_content = file.read()
+        else:
+            parser.print_help()
+            return
+
+        if args.additional_arg:
+            print(f"Additional argument provided: {args.additional_arg}")
+
+        analyze_diff(diff_content)
+    else:
+        parser.print_help()
+
 if __name__ == "__main__":
-    app.run(host="localhost", port=3000)
+    main()
+
