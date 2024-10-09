@@ -140,36 +140,15 @@ def extract_commit_info(diff_content):
     else:
         print("No commit messages found in the diff content.")
 
-    return commit_range, commit_messages
+    return commit_messages
 
-def get_commit_comments(commit_range):
-    try:
-        result = subprocess.run(['git', 'log', '--pretty=format:%s', commit_range],
-                                capture_output=True, text=True, check=True)
-        comments = result.stdout.strip().split('\n')
-        print(f"Retrieved {len(comments)} commit comment(s) from git log.")
-        return comments
-    except subprocess.CalledProcessError:
-        print("Warning: Unable to retrieve commit comments using git log. This may not be a git repository or the specified range is invalid.")
-        return []
+def analyze_diff(diff_content):
+    extracted_messages = extract_commit_info(diff_content)
 
-def analyze_diff(diff_content, provided_commit_range=None):
-    extracted_range, extracted_messages = extract_commit_info(diff_content)
-
-    if provided_commit_range:
-        commit_comments = get_commit_comments(provided_commit_range)
-    elif extracted_range:
-        commit_comments = get_commit_comments(extracted_range)
+    if not extracted_messages:
+        comments_str = "No commit information found."
     else:
-        commit_comments = extracted_messages
-
-    if not commit_comments:
-        if extracted_range:
-            comments_str = f"Commit range {extracted_range} found, but unable to retrieve commit messages."
-        else:
-            comments_str = "No commit information available."
-    else:
-        comments_str = "\n".join(commit_comments)
+        comments_str = "\n".join(extracted_messages)
 
     pr_data = {
         "title": "Local Diff Analysis",
