@@ -1,7 +1,6 @@
 import ollama
-import requests
-import json
-import sys
+
+from model import post_request_generate
 from prompts import CODE_REVIEW_PROMPT, FEEDBACK_IMPROVEMENT_PROMPT, EXAMPLES
 
 class Agent:
@@ -15,43 +14,11 @@ class Agent:
         model = model_name or self.model_name
 
         if self.use_post_request:
-            response = self._post_request_generate(model, prompt)
+            response = post_request_generate(model, prompt)
         else:
             response = ollama.generate(model=model, prompt=prompt)['response']
 
         return prompt, response
-
-    def _post_request_generate(self, model, prompt):
-        url = "http://localhost:11434/api/generate"
-        headers = {"Content-Type": "application/json"}
-        data = {"model": model, "prompt": prompt, "stream": True}
-
-        response_content = ""
-        with requests.post(url, headers=headers, json=data, stream=True) as r:
-            for line in r.iter_lines():
-                if line:
-                    json_response = json.loads(line)
-                    if not json_response.get("done", False):
-                        content = json_response.get("response", "")
-                        print(content, end='', flush=True)
-                        response_content += content
-                    else:
-                        # This is the final response with metrics
-                        print("\n\n---------------------")
-                        eval_count = json_response.get("eval_count", 0)
-                        prompt_eval_count = json_response.get('prompt_eval_count', 0)
-                        eval_duration = json_response.get("eval_duration", 1)  # in nanoseconds
-                        tokens_per_second = (eval_count / eval_duration) * 1e9
-                        print(f"Tokens generated: {eval_count}")
-                        print(f"Generation time: {eval_duration / 1e9:.2f} seconds")
-                        print(f"Speed: {tokens_per_second:.2f} tokens/second")
-                        print(f"Prompt tokens: {prompt_eval_count}")
-                        print(f"Total tokens: {prompt_eval_count + eval_count}")
-                        print(f"Total duration: {json_response.get('total_duration', 0) / 1e9:.2f} seconds")
-                        print("---------------------")
-
-        print()
-        return response_content
 
     def _prepare_prompt(self, data):
         if self.role == "code_reviewer":

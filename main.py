@@ -51,7 +51,7 @@ def handle_issue_comment(payload):
     print(f"\n\nReceived comment:\n   action: {action},\n   comment body: {comment["body"]}")
 
     if "pull_request" in issue and action == "created" and "@pearbot review" in comment["body"].lower():
-        print(f"\nReview requested for Pull Request #{issue['number']}")
+        print(f"\nReview requested with `@pearbot review` for Pull Request #{issue['number']}")
         perform_review(issue["number"], repo["full_name"], payload["installation"]["id"])
     else:
         print(f"Review condition not found")
@@ -74,9 +74,9 @@ def perform_review(pr_number, repo_full_name, installation_id):
     review_models = ["llama3.1", "codellama", "codestral"]
 
     for i in range(NUM_INITIAL_REVIEWS):
+        print(f"\n\n >>> Requesting initial review {i+1} (with {review_models[i]})...")
         _, initial_review = code_review_agent.analyze(pr_data, review_models[i])
         initial_reviews.append(initial_review)
-        print(f"\n\n >>> Requesting initial review {i+1} (with {review_models[i]})...")
 
     improvement_data = {
         "pr_data": pr_data,
