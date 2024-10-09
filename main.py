@@ -11,9 +11,6 @@ from github import Github, GithubException
 
 load_dotenv()
 
-NUM_INITIAL_REVIEWS = 3
-REVIEW_MODELS = ["llama3.1", "codellama", "codestral"]
-
 try:
     from auth import verify_webhook_signature, get_installation_access_token
     from storage import get_or_create_session
@@ -53,7 +50,7 @@ def handle_issue_comment(payload):
     issue = payload["issue"]
     repo = payload["repository"]
 
-    print(f"\n\nReceived comment:\n   action: {action},\n   comment body: {comment["body"]}")
+    print(f"\n\nReceived comment:\n   action: {action},\n   comment body: {comment['body']}")
 
     if "pull_request" in issue and action == "created" and "@pearbot review" in comment["body"].lower():
         print(f"\nReview requested with `@pearbot review` for Pull Request #{issue['number']}")
@@ -77,9 +74,9 @@ def perform_review(pr_number, repo_full_name, installation_id):
 
     initial_reviews = []
 
-    for i in range(NUM_INITIAL_REVIEWS):
-        print(f"\n\n >>> Requesting initial review {i+1} (with {REVIEW_MODELS[i]})...")
-        _, initial_review = code_review_agent.analyze(pr_data, REVIEW_MODELS[i])
+    for model in app.config['REVIEW_MODELS']:
+        print(f"\n\n >>> Requesting initial review with {model}...")
+        _, initial_review = code_review_agent.analyze(pr_data, model)
         initial_reviews.append(initial_review)
 
     improvement_data = {
@@ -122,7 +119,6 @@ def extract_commit_info(diff_content):
     commit_range = None
     commit_messages = []
 
-    # Updated regex to match both full and shortened commit hashes
     commit_hashes = re.findall(r'index ([0-9a-f]{7,40})\.\.([0-9a-f]{7,40})', diff_content)
     if commit_hashes:
         first_commit, last_commit = commit_hashes[0][0], commit_hashes[-1][1]
@@ -131,7 +127,6 @@ def extract_commit_info(diff_content):
     else:
         print("No commit range found in the diff content.")
 
-    # Try to find commit messages in git format-patch style diffs
     message_blocks = re.findall(r'From [0-9a-f]+ .*\nFrom: .*\nDate: .*\nSubject: \[PATCH\] (.*)', diff_content)
     commit_messages.extend(message_blocks)
 
@@ -160,9 +155,9 @@ def analyze_diff(diff_content):
     # print(json.dumps(pr_data, indent=4))
 
     initial_reviews = []
-    for i in range(NUM_INITIAL_REVIEWS):
-        print(f"\n\n >>> Requesting initial review {i+1} (with {REVIEW_MODELS[i]})...")
-        _, initial_review = code_review_agent.analyze(pr_data, REVIEW_MODELS[i])
+    for model in app.config['REVIEW_MODELS']:
+        print(f"\n\n >>> Requesting initial review with {model}...")
+        _, initial_review = code_review_agent.analyze(pr_data, model)
         initial_reviews.append(initial_review)
 
     improvement_data = {
@@ -179,9 +174,12 @@ def main():
     parser = argparse.ArgumentParser(description="Code Review Script")
     parser.add_argument("--server", action="store_true", help="Run as a server")
     parser.add_argument("--diff", type=str, nargs='?', const='-', help="Path to the diff file or '-' for stdin")
-    parser.add_argument("--additional-arg", type=str, help="An example of an additional argument")
+    parser.add_argument("--review-models", type=str, default="llama3.1,codellama,codestral",
+                        help="Comma-separated list of model names for review (default: llama3.1,codellama,codestral)")
 
     args = parser.parse_args()
+
+    app.config['REVIEW_MODELS'] = args.review_models.split(',')
 
     if args.server:
         print("Running as a server...")
@@ -198,13 +196,9 @@ def main():
             parser.print_help()
             return
 
-        if args.additional_arg:
-            print(f"Additional argument provided: {args.additional_arg}")
-
         analyze_diff(diff_content)
     else:
         parser.print_help()
 
 if __name__ == "__main__":
     main()
-
