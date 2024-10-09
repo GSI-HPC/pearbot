@@ -1,7 +1,10 @@
+import argparse
 import json
+import re
+import subprocess
 import sys
 import traceback
-import argparse
+
 from flask import Flask, request, abort
 from dotenv import load_dotenv
 from github import Github, GithubException
@@ -115,13 +118,67 @@ def file_changes_as_string(files):
 """)
     return "\n---\n".join(file_changes)
 
-def analyze_diff(diff_content):
+def extract_commit_info(diff_content):
+    commit_range = None
+    commit_messages = []
+
+    # Updated regex to match both full and shortened commit hashes
+    commit_hashes = re.findall(r'index ([0-9a-f]{7,40})\.\.([0-9a-f]{7,40})', diff_content)
+    if commit_hashes:
+        first_commit, last_commit = commit_hashes[0][0], commit_hashes[-1][1]
+        commit_range = f"{first_commit}..{last_commit}"
+        print(f"Extracted commit range: {commit_range}")
+    else:
+        print("No commit range found in the diff content.")
+
+    # Try to find commit messages in git format-patch style diffs
+    message_blocks = re.findall(r'From [0-9a-f]+ .*\nFrom: .*\nDate: .*\nSubject: \[PATCH\] (.*)', diff_content)
+    commit_messages.extend(message_blocks)
+
+    if commit_messages:
+        print(f"Extracted {len(commit_messages)} commit message(s) from the diff content.")
+    else:
+        print("No commit messages found in the diff content.")
+
+    return commit_range, commit_messages
+
+def get_commit_comments(commit_range):
+    try:
+        result = subprocess.run(['git', 'log', '--pretty=format:%s', commit_range],
+                                capture_output=True, text=True, check=True)
+        comments = result.stdout.strip().split('\n')
+        print(f"Retrieved {len(comments)} commit comment(s) from git log.")
+        return comments
+    except subprocess.CalledProcessError:
+        print("Warning: Unable to retrieve commit comments using git log. This may not be a git repository or the specified range is invalid.")
+        return []
+
+def analyze_diff(diff_content, provided_commit_range=None):
+    extracted_range, extracted_messages = extract_commit_info(diff_content)
+
+    if provided_commit_range:
+        commit_comments = get_commit_comments(provided_commit_range)
+    elif extracted_range:
+        commit_comments = get_commit_comments(extracted_range)
+    else:
+        commit_comments = extracted_messages
+
+    if not commit_comments:
+        if extracted_range:
+            comments_str = f"Commit range {extracted_range} found, but unable to retrieve commit messages."
+        else:
+            comments_str = "No commit information available."
+    else:
+        comments_str = "\n".join(commit_comments)
+
     pr_data = {
         "title": "Local Diff Analysis",
-        "description": "Analyzing a local diff file or stdin input",
+        "description": f"Analyzing a local diff with the following commit information:\n\n{comments_str}",
         "changes": diff_content,
         "context": ""
     }
+
+    # print(json.dumps(pr_data, indent=4))
 
     initial_reviews = []
     for i in range(NUM_INITIAL_REVIEWS):
