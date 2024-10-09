@@ -19,8 +19,8 @@ except EnvironmentError as e:
     sys.exit(1)
 
 app = Flask(__name__)
-code_review_agent = Agent(role="code_reviewer")
-feedback_improver_agent = Agent(role="feedback_improver")
+code_review_agent = Agent(role="code_reviewer", use_post_request=True)
+feedback_improver_agent = Agent(role="feedback_improver", use_post_request=True)
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
