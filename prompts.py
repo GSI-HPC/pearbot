@@ -21,7 +21,7 @@ CODE_REVIEW_PROMPT = """
 
     {examples}
 
-    Your response:
+    DO NOT include or comment on the examples in your reply. Your response:
         Let's work this out in a step by step way to be sure we provide only useful suggestions:
 """
 
@@ -53,7 +53,7 @@ FEEDBACK_IMPROVEMENT_PROMPT = """
 
     {examples}
 
-    Your feedback to the Pull Request code changes:
+    DO NOT include or comment on the examples in your reply. Only your feedback to the Pull Request code changes:
 """
 
 EXAMPLES = """

@@ -148,11 +148,11 @@ def analyze_diff(diff_content):
     if not extracted_messages:
         comments_str = "No commit information found."
     else:
-        comments_str = "\n".join(extracted_messages)
+        comments_str = "\n    ".join(extracted_messages)
 
     pr_data = {
         "title": "Local Diff Analysis",
-        "description": f"Analyzing a local diff with the following commit information:\n\n{comments_str}",
+        "description": f"    commits:\n\n{comments_str}",
         "changes": diff_content,
         "context": ""
     }
