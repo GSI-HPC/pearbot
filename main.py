@@ -5,6 +5,9 @@ import subprocess
 import sys
 import traceback
 
+from colorama import Fore, Style
+import colorama
+
 from flask import Flask, request, abort
 from dotenv import load_dotenv
 from github import Github, GithubException
@@ -74,8 +77,9 @@ def perform_review(pr_number, repo_full_name, installation_id):
 
     initial_reviews = []
 
-    for model in app.config['REVIEW_MODELS']:
-        print(f"\n\n >>> Requesting initial review with {model}...")
+    for model in app.config['INITIAL_REVIEW_MODELS']:
+        print(Fore.GREEN + f"\n\n >>> Requesting initial review with {model}...")
+        print(Style.RESET_ALL)
         _, initial_review = code_review_agent.analyze(pr_data, model)
         initial_reviews.append(initial_review)
 
@@ -83,8 +87,9 @@ def perform_review(pr_number, repo_full_name, installation_id):
         "pr_data": pr_data,
         "initial_reviews": initial_reviews
     }
-    print(f"\n\n >>> Requesting improved review (with llama3.1)...\n\n")
-    improver_prompt, improved_feedback = feedback_improver_agent.analyze(improvement_data, "llama3.1")
+    print(Fore.GREEN + f"\n\n >>> Requesting improved review (with {app.config['FINAL_REVIEW_MODEL']})...\n\n")
+    print(Style.RESET_ALL)
+    improver_prompt, improved_feedback = feedback_improver_agent.analyze(improvement_data, app.config['FINAL_REVIEW_MODEL'])
 
     try:
         print(f"\n\nPosting improved feedback:\n{improved_feedback}\n\n")
@@ -152,11 +157,12 @@ def analyze_diff(diff_content):
         "context": ""
     }
 
-    # print(json.dumps(pr_data, indent=4))
+    print(json.dumps(pr_data, indent=4))
 
     initial_reviews = []
-    for model in app.config['REVIEW_MODELS']:
-        print(f"\n\n >>> Requesting initial review with {model}...")
+    for model in app.config['INITIAL_REVIEW_MODELS']:
+        print(Fore.GREEN + f"\n\n >>> Requesting initial review with {model}...")
+        print(Style.RESET_ALL)
         _, initial_review = code_review_agent.analyze(pr_data, model)
         initial_reviews.append(initial_review)
 
@@ -165,8 +171,9 @@ def analyze_diff(diff_content):
         "initial_reviews": initial_reviews
     }
 
-    print(f"\n\n >>> Requesting improved review (with llama3.1)...\n\n")
-    _, improved_feedback = feedback_improver_agent.analyze(improvement_data, "llama3.1")
+    print(Fore.GREEN + f"\n\n >>> Requesting improved review (with {app.config['FINAL_REVIEW_MODEL']})...\n\n")
+    print(Style.RESET_ALL)
+    _, improved_feedback = feedback_improver_agent.analyze(improvement_data, app.config['FINAL_REVIEW_MODEL'])
 
     print(f"\n\nImproved feedback:\n{improved_feedback}\n\n")
 
@@ -174,12 +181,13 @@ def main():
     parser = argparse.ArgumentParser(description="Code Review Script")
     parser.add_argument("--server", action="store_true", help="Run as a server")
     parser.add_argument("--diff", type=str, nargs='?', const='-', help="Path to the diff file or '-' for stdin")
-    parser.add_argument("--review-models", type=str, default="llama3.1,codellama,codestral",
-                        help="Comma-separated list of model names for review (default: llama3.1,codellama,codestral)")
+    parser.add_argument("--model", type=str, default="llama3.1", help="Model for the final review step")
+    parser.add_argument("--initial-review-models", type=str, default="llama3.1,codellama,codestral", help="Comma-separated list of model names for the initial review (default: llama3.1,codellama,codestral)")
 
     args = parser.parse_args()
 
-    app.config['REVIEW_MODELS'] = args.review_models.split(',')
+    app.config['INITIAL_REVIEW_MODELS'] = args.initial_review_models.split(',')
+    app.config['FINAL_REVIEW_MODEL'] = args.model
 
     if args.server:
         print("Running as a server...")
