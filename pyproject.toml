@@ -12,6 +12,7 @@ dependencies = [
     "requests==2.31.0",
     "PyGithub==2.4.0",
     "ollama==0.3.3",
+    "colorama==0.4.6",
 ]
 
 [project.urls]
