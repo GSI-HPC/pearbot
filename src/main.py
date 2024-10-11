@@ -6,7 +6,6 @@ import sys
 import traceback
 
 from colorama import Fore, Style
-import colorama
 
 from flask import Flask, request, abort
 from dotenv import load_dotenv

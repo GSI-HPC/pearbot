@@ -1,19 +1,21 @@
 [project]
 name = "pearbot"
 description = "An AI assistant that reviews Pull Requests from GitHub and/or local diffs"
-version = "0.1.1"
+version = "0.1.0"
 license = { file = "LICENSE" }
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
-    "Flask==2.0.1",
-    "python-dotenv==0.19.0",
-    "PyJWT==2.3.0",
-    "requests==2.26.0",
-    "PyGithub==1.55.0",
-    "ollama==0.1.0",
-    "colorama==0.4.6",
+    "Flask==3.0.3",
+    "python-dotenv==1.0.1",
+    "PyJWT==2.9.0",
+    "requests==2.31.0",
+    "PyGithub==2.4.0",
+    "ollama==0.3.10",
 ]
 
 [project.urls]
 repository = "https://github.com/rbx/pearbot"
+
+[tool.setuptools.packages.find]
+where = ["src"]

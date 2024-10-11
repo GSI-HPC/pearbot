@@ -4,7 +4,6 @@ import time
 import requests
 import hmac
 import hashlib
-from dotenv import load_dotenv
 
 GITHUB_APP_ID = os.getenv("GITHUB_APP_ID")
 GITHUB_PRIVATE_KEY = os.getenv("GITHUB_PRIVATE_KEY")

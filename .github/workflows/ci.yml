@@ -5,6 +5,7 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+  workflow_dispatch:
 
 jobs:
   test:
@@ -29,7 +30,7 @@ jobs:
     - name: Test app startup
       run: |
         python -c "import main; print('Main module imported successfully')"
-        python main.py --help
+        python -m main --help
       env:
         GITHUB_APP_ID: dummy_id
         GITHUB_PRIVATE_KEY: dummy_key
@@ -37,7 +38,7 @@ jobs:
 
     - name: Test server startup
       run: |
-        timeout 5s python main.py --server || code=$?; if [[ $code -ne 124 && $code -ne 0 ]]; then exit $code; fi
+        timeout 5s python -m main --server || code=$?; if [[ $code -ne 124 && $code -ne 0 ]]; then exit $code; fi
       env:
         GITHUB_APP_ID: dummy_id
         GITHUB_PRIVATE_KEY: dummy_key
