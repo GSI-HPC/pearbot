@@ -46,7 +46,7 @@ Pearbot is an AI assistant that reviews Pull Requests on GitHub and/or local dif
 
 2. Run the Pearbot server:
    ```
-   python main.py --server
+   python pearbot.py --server
    ```
 
 3. The server will now listen for GitHub webhook events and automatically review Pull Requests when it encounters `@pearbot review` in a comment.
@@ -56,16 +56,16 @@ Pearbot is an AI assistant that reviews Pull Requests on GitHub and/or local dif
 To analyze a local diff file:
 
 ```
-python main.py --diff path/to/your/diff/file
+python pearbot.py --diff path/to/your/diff/file
 ```
 
 Or pipe a diff directly:
 
 ```
-git diff | python main.py
+git diff | python pearbot.py
 ```
 
 You can generate diffs that include commit messages, e.g.:
 ```
-git format-patch HEAD~3..HEAD --stdout
+git format-patch HEAD~3..HEAD --stdout | python pearbot.py
 ```

@@ -177,7 +177,7 @@ def analyze_diff(diff_content):
     print(f"\n\nImproved feedback:\n{improved_feedback}\n\n")
 
 def main():
-    parser = argparse.ArgumentParser(description="Code Review Script")
+    parser = argparse.ArgumentParser(description="Pearbot Code Review")
     parser.add_argument("--server", action="store_true", help="Run as a server")
     parser.add_argument("--diff", type=str, nargs='?', const='-', help="Path to the diff file or '-' for stdin")
     parser.add_argument("--model", type=str, default="llama3.1", help="Model for the final review step")

@@ -29,8 +29,8 @@ jobs:
 
       - name: Test app startup
         run: |
-          python -c "from src import main; print('Main module imported successfully')"
-          python -m src.main --help
+          python -c "from src import pearbot; print('pearbot module imported successfully')"
+          python -m src.pearbot --help
         env:
           GITHUB_APP_ID: dummy_id
           GITHUB_PRIVATE_KEY: dummy_key
@@ -38,7 +38,7 @@ jobs:
 
       - name: Test server startup
         run: |
-          timeout 5s python -m src.main --server || code=$?; if [[ $code -ne 124 && $code -ne 0 ]]; then exit $code; fi
+          timeout 5s python -m src.pearbot --server || code=$?; if [[ $code -ne 124 && $code -ne 0 ]]; then exit $code; fi
         env:
           GITHUB_APP_ID: dummy_id
           GITHUB_PRIVATE_KEY: dummy_key
