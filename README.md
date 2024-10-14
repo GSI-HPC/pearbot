@@ -7,8 +7,15 @@ Pearbot is an AI assistant that reviews Pull Requests on GitHub and/or local dif
 ## Prerequisites
 
 - Python 3.9 or higher
-- GitHub account (for Pull Request reviews)
+- GitHub account (only for Pull Request reviews)
 - Ollama or compatible AI model service
+
+Install and run the Ollama AI model service by following the instructions in the [ollama website](https://ollama.com/download).
+
+Install at least one model to use with Pearbot (default of pearbot is `llama3.1`):
+```
+ollama pull llama3.1
+```
 
 ## Installation
 
@@ -29,7 +36,7 @@ Pearbot is an AI assistant that reviews Pull Requests on GitHub and/or local dif
    pip install .
    ```
 
-## Configuration
+## Configuration (for use as GitHub App)
 
 1. Create a `.env` file in the project root and add the following environment variables:
    ```
