@@ -55,7 +55,7 @@ ollama pull llama3.1
 
 2. Run the Pearbot server:
    ```
-   python pearbot.py --server
+   python src/pearbot.py --server
    ```
 
 3. The server will now listen for GitHub webhook events and automatically review Pull Requests when it encounters `@pearbot review` in a comment.
@@ -65,16 +65,16 @@ ollama pull llama3.1
 To analyze a local diff file:
 
 ```
-python pearbot.py --diff path/to/your/diff/file
+python src/pearbot.py --diff path/to/your/diff/file
 ```
 
 Or pipe a diff directly:
 
 ```
-git diff | python pearbot.py
+git diff | python src/pearbot.py
 ```
 
 You can generate diffs that include commit messages, e.g.:
 ```
-git format-patch HEAD~3..HEAD --stdout | python pearbot.py
+git format-patch HEAD~3..HEAD --stdout | python src/pearbot.py
 ```
