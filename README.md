@@ -1,3 +1,5 @@
+[![CI](https://github.com/rbx/pearbot/actions/workflows/ci.yml/badge.svg)](https://github.com/rbx/pearbot/actions/workflows/ci.yml)
+
 # Pearbot
 
 Pearbot is an AI assistant that reviews Pull Requests on GitHub and/or local diffs. It leverages locally installed AI models in a multi-agent setup with reflection to provide code reviews, helping improve their code quality and catch potential issues early in the development process.
