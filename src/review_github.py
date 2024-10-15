@@ -10,6 +10,8 @@ import traceback
 from github import Github, GithubException
 from flask import Flask, request, abort
 
+from ollama_utils import validate_models
+
 class GitHubReviewer:
     def __init__(self, code_review_agent, feedback_improver_agent):
         try:
@@ -106,6 +108,9 @@ class GitHubReviewer:
             print(f"Review condition not found")
 
     def perform_review(self, pr_number, repo_full_name, installation_id):
+        if not validate_models(self.app.config['INITIAL_REVIEW_MODELS'] + [self.app.config['FINAL_REVIEW_MODEL']]):
+            sys.exit(1)
+
         access_token = self.get_installation_access_token(installation_id)
         g = Github(access_token)
         repo_obj = g.get_repo(repo_full_name)

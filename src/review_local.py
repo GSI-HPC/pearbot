@@ -1,7 +1,10 @@
 import json
 import re
+import sys
 
 from colorama import Fore, Style
+
+from ollama_utils import validate_models
 
 def extract_commit_info(diff_content):
     commit_range = None
@@ -26,6 +29,9 @@ def extract_commit_info(diff_content):
     return commit_messages
 
 def analyze_diff(diff_content, code_review_agent, feedback_improver_agent, initial_review_models, final_review_model):
+    if not validate_models(initial_review_models + [final_review_model]):
+        sys.exit(1)
+
     extracted_messages = extract_commit_info(diff_content)
 
     if not extracted_messages:

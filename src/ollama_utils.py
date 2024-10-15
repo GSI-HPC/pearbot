@@ -28,3 +28,14 @@ def get_available_models():
     except requests.RequestException as e:
         print(f"Error connecting to Ollama API: {e}")
         return []
+
+def validate_models(models):
+    all_models = set(models)
+    unavailable_models = [model for model in all_models if not is_model_available(model)]
+
+    if unavailable_models:
+        print(f"Error: The following models are not available: {', '.join(unavailable_models)}")
+        print("Available models:")
+        print(", ".join(get_available_models()))
+        return False
+    return True

@@ -9,18 +9,7 @@ from storage import get_or_create_session
 from agents import Agent
 from review_github import GitHubReviewer
 from review_local import analyze_diff
-from ollama_utils import is_model_available, get_available_models
-
-def validate_models(initial_review_models, final_review_model):
-    all_models = initial_review_models + [final_review_model]
-    unavailable_models = [model for model in all_models if not is_model_available(model)]
-
-    if unavailable_models:
-        print(f"Error: The following models are not available: {', '.join(unavailable_models)}")
-        print("Available models:")
-        print(", ".join(get_available_models()))
-        return False
-    return True
+from ollama_utils import get_available_models
 
 def main():
     parser = argparse.ArgumentParser(description="Pearbot Code Review")
@@ -34,10 +23,7 @@ def main():
     initial_review_models = args.initial_review_models.split(',')
     final_review_model = args.model
 
-    print(f"Available models: {', '.join(get_available_models())}")
-
-    if not validate_models(initial_review_models, final_review_model):
-        sys.exit(1)
+    print(f"Available models: {', '.join(get_available_models()) or 'NONE'}")
 
     code_review_agent = Agent(role="code_reviewer", use_post_request=True)
     feedback_improver_agent = Agent(role="feedback_improver", use_post_request=True)
