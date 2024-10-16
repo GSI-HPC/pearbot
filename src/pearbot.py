@@ -16,6 +16,7 @@ def main():
     parser.add_argument("--server", action="store_true", help="Run as a server")
     parser.add_argument("--diff", type=str, nargs='?', const='-', help="Path to the diff file or '-' for stdin")
     parser.add_argument("--model", type=str, default="llama3.1", help="Model for the final review step")
+    parser.add_argument("--prompt-style", type=str, default="default", help="Prompt style (from prompts.yaml)")
     parser.add_argument("--initial-review-models", type=str, default="llama3.1,llama3.1,llama3.1", help="Comma-separated list of model names for the initial review (default: llama3.1,llama3.1,llama3.1)")
 
     args = parser.parse_args()
@@ -25,8 +26,8 @@ def main():
 
     print(f"Available models: {', '.join(get_available_models()) or 'NONE'}")
 
-    code_review_agent = Agent(role="code_reviewer", use_post_request=True)
-    feedback_improver_agent = Agent(role="feedback_improver", use_post_request=True)
+    code_review_agent = Agent(role="code_reviewer", use_post_request=True, prompt_style=args.prompt_style)
+    feedback_improver_agent = Agent(role="feedback_improver", use_post_request=True, prompt_style=args.prompt_style)
 
     if args.server:
         print("Running as a server...")

@@ -1,17 +1,26 @@
 import ollama
+import yaml
 
 from model import post_request_generate
-from prompts import CODE_REVIEW_PROMPT, FEEDBACK_IMPROVEMENT_PROMPT, EXAMPLES
 
 class Agent:
-    def __init__(self, model_name="llama3.1", role="code_reviewer", use_post_request=False):
+    def __init__(self, model_name="llama3.1", role="code_reviewer", use_post_request=False, prompt_style="default"):
         self.model_name = model_name
         self.role = role
         self.use_post_request = use_post_request
+        self.prompt_style = prompt_style
+        self.prompts = self._load_prompts()
+        print(f"Inited agent with model: {model_name}, role: {role}, use_post_request: {use_post_request}, prompt_style: {prompt_style}")
+
+    def _load_prompts(self):
+        with open('src/prompts.yaml', 'r') as file:
+            return yaml.safe_load(file)['prompts']
 
     def analyze(self, data, model_name=None):
         prompt = self._prepare_prompt(data)
         model = model_name or self.model_name
+
+        # print(f"Prompt:\n{prompt}\nENDOFPROMPT")
 
         if self.use_post_request:
             response = post_request_generate(model, prompt)
@@ -25,19 +34,19 @@ class Agent:
             return self._prepare_code_review_prompt(data)
         elif self.role == "feedback_improver":
             prompt = self._prepare_feedback_improvement_prompt(data)
-            print(f"IMPROVERPROMPT:\n{prompt}\nENDOFIMPROVERPROMPT")
+            # print(f"IMPROVERPROMPT:\n{prompt}\nENDOFIMPROVERPROMPT")
             return prompt
         else:
             raise ValueError(f"Unknown role: {self.role}")
 
     def _prepare_code_review_prompt(self, pr_data):
         context = f"Additional Context:\n{pr_data['context']}" if pr_data.get('context') else ""
-        return CODE_REVIEW_PROMPT.format(
+        return self.prompts['instructions'][self.prompt_style]['review'].format(
             title=pr_data['title'],
             description=pr_data['description'],
             changes=pr_data['changes'],
             context=context,
-            examples=EXAMPLES
+            examples=self.prompts['examples']
         )
 
     def _prepare_feedback_improvement_prompt(self, review_data):
@@ -50,11 +59,11 @@ Review #{i}:
 {review}
 ---
 """
-        return FEEDBACK_IMPROVEMENT_PROMPT.format(
+        return self.prompts['instructions'][self.prompt_style]['feedback'].format(
             title=review_data['pr_data']['title'],
             description=review_data['pr_data']['description'],
             changes=review_data['pr_data']['changes'],
             reviews=reviews,
             context=context,
-            examples=EXAMPLES
+            examples=self.prompts['examples']
         )
