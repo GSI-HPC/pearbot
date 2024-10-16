@@ -31,9 +31,7 @@ def main():
 
     if args.server:
         print("Running as a server...")
-        github_reviewer = GitHubReviewer(code_review_agent, feedback_improver_agent)
-        github_reviewer.app.config['INITIAL_REVIEW_MODELS'] = initial_review_models
-        github_reviewer.app.config['FINAL_REVIEW_MODEL'] = final_review_model
+        github_reviewer = GitHubReviewer(code_review_agent, feedback_improver_agent, initial_review_models, final_review_model)
         github_reviewer.run_server()
     elif args.diff or not sys.stdin.isatty():
         if args.diff == '-' or not sys.stdin.isatty():
