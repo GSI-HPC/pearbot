@@ -22,12 +22,12 @@ def main():
 
     args = parser.parse_args()
 
-    initial_review_models = args.initial_review_models.split(',')
-    final_review_model = args.model
-
     print(f"Available models: {', '.join(get_available_models()) or 'NONE'}")
     if args.list_models:
         return
+
+    initial_review_models = args.initial_review_models.split(',')
+    final_review_model = args.model
 
     code_review_agent = Agent(role="code_reviewer", use_post_request=True, prompt_style=args.prompt_style)
     feedback_improver_agent = Agent(role="feedback_improver", use_post_request=True, prompt_style=args.prompt_style)
