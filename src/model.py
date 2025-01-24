@@ -8,7 +8,7 @@ def post_request_generate(model, prompt):
     headers = {"Content-Type": "application/json"}
     data = {"model": model, "prompt": prompt, "stream": True}
 
-    model_details = get_model_details(model)
+    model_details = ollama.show(model)
     model_format = model_details.get("details", {}).get("format", "N/A")
     model_family = model_details.get("details", {}).get("family", "N/A")
     model_parameter_size = model_details.get("details", {}).get("parameter_size", "N/A")
@@ -46,10 +46,3 @@ def post_request_generate(model, prompt):
                     print("---------------------")
     print()
     return response_content
-
-
-def get_model_details(model):
-    try:
-        return ollama.show(model)
-    except Exception as e:
-        return f"Error retrieving model details: {str(e)}"
