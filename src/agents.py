@@ -10,7 +10,7 @@ class Agent:
         self.use_post_request = use_post_request
         self.prompt_style = prompt_style
         self.prompts = self._load_prompts()
-        print(f"Inited agent with model: {model_name}, role: {role}, use_post_request: {use_post_request}, prompt_style: {prompt_style}")
+        print(f"Initialized agent with model: {model_name}, role: {role}, use_post_request: {use_post_request}, prompt_style: {prompt_style}")
 
     def _load_prompts(self):
         with open('src/prompts.yaml', 'r') as file:
