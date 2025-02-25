@@ -1,9 +1,13 @@
 import ollama
 
 def get_available_models():
-    model_list = ollama.list()
-    models = model_list.get("models", [])
-    return [model["name"] for model in models]
+    try:
+        model_list = ollama.list()
+        models = model_list.get("models", [])
+        return [model["name"] for model in models]
+    except Exception as e:
+        print(f"Error fetching available models: {e}")
+        return []
 
 def is_model_available(model_name):
     available_models = get_available_models()
