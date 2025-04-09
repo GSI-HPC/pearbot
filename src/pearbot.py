@@ -19,6 +19,7 @@ def main():
     parser.add_argument("--list-models", action="store_true", help="List available models")
     parser.add_argument("--prompt-style", type=str, default="default", help="Prompt style (from prompts.yaml)")
     parser.add_argument("--initial-review-models", type=str, default="llama3.1,llama3.1,llama3.1", help="Comma-separated list of model names for the initial review (default: llama3.1,llama3.1,llama3.1)")
+    parser.add_argument("--skip-reasoning", action="store_true", help="Skip reasoning section (if present)")
 
     args = parser.parse_args()
 
@@ -34,7 +35,7 @@ def main():
 
     if args.server:
         print("Running as a server...")
-        github_reviewer = GitHubReviewer(code_review_agent, feedback_improver_agent, initial_review_models, final_review_model)
+        github_reviewer = GitHubReviewer(code_review_agent, feedback_improver_agent, initial_review_models, final_review_model, args.skip_reasoning)
         github_reviewer.run_server()
     elif args.diff or not sys.stdin.isatty():
         if args.diff == '-' or not sys.stdin.isatty():
@@ -48,7 +49,7 @@ def main():
             parser.print_help()
             return
 
-        analyze_diff(diff_content, code_review_agent, feedback_improver_agent, initial_review_models, final_review_model)
+        analyze_diff(diff_content, code_review_agent, feedback_improver_agent, initial_review_models, final_review_model, args.skip_reasoning)
     else:
         parser.print_help()
 

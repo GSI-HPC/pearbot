@@ -5,6 +5,7 @@ import sys
 from colorama import Fore, Style
 
 from ollama_utils import validate_models
+from utils import remove_reasoning
 
 def extract_commit_info(diff_content):
     commit_range = None
@@ -28,8 +29,8 @@ def extract_commit_info(diff_content):
 
     return commit_messages
 
-def analyze_diff(diff_content, code_review_agent, feedback_improver_agent, initial_review_models, final_review_model):
-    if not validate_models(initial_review_models + [final_review_model]):
+def analyze_diff(diff_content, code_review_agent, feedback_improver_agent, initial_review_models, final_review_model, skip_reasoning: bool):
+    if not validate_models(initial_review_models + ([final_review_model] if final_review_model != "" else [])):
         sys.exit(1)
 
     extracted_messages = extract_commit_info(diff_content)
@@ -60,8 +61,15 @@ def analyze_diff(diff_content, code_review_agent, feedback_improver_agent, initi
         "initial_reviews": initial_reviews
     }
 
-    print(Fore.GREEN + f"\n\n >>> Requesting improved review (with {final_review_model})...\n\n")
+    if final_review_model != "":
+        print(Fore.GREEN + f"\n\n >>> Requesting improved review (with {final_review_model})...\n\n")
+        _, improved_feedback = feedback_improver_agent.analyze(improvement_data, final_review_model)
+    else:
+        print(Fore.GREEN + f"\n\n >>> No final review model specified. Returning first review.\n\n")
+        improved_feedback = initial_reviews[0]
     print(Style.RESET_ALL)
-    _, improved_feedback = feedback_improver_agent.analyze(improvement_data, final_review_model)
+
+    if skip_reasoning:
+        improved_feedback = remove_reasoning(improved_feedback)
 
     print(f"\n\nImproved feedback:\n{improved_feedback}\n\n")

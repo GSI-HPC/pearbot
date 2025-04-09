@@ -11,9 +11,10 @@ from github import Github, GithubException
 from flask import Flask, request, abort
 
 from ollama_utils import validate_models
+from utils import remove_reasoning
 
 class GitHubReviewer:
-    def __init__(self, code_review_agent, feedback_improver_agent, initial_review_models, final_review_model):
+    def __init__(self, code_review_agent, feedback_improver_agent, initial_review_models, final_review_model, skip_reasoning: bool):
         try:
             self.GITHUB_APP_ID = os.getenv("GITHUB_APP_ID")
             self.GITHUB_PRIVATE_KEY = os.getenv("GITHUB_PRIVATE_KEY")
@@ -32,6 +33,7 @@ class GitHubReviewer:
         self.feedback_improver_agent = feedback_improver_agent
         self.initial_review_models = initial_review_models
         self.final_review_model = final_review_model
+        self.skip_reasoning = skip_reasoning
 
         self.app = Flask(__name__)
         self.setup_routes()
@@ -110,7 +112,7 @@ class GitHubReviewer:
             print(f"Review condition not found")
 
     def perform_review(self, pr_number, repo_full_name, installation_id):
-        if not validate_models(self.initial_review_models + [self.final_review_model]):
+        if not validate_models(self.initial_review_models + ([self.final_review_model] if self.final_review_model != "" else [])):
             sys.exit(1)
 
         access_token = self.get_installation_access_token(installation_id)
@@ -136,12 +138,19 @@ class GitHubReviewer:
             "pr_data": pr_data,
             "initial_reviews": initial_reviews
         }
-        print(f"\n\n >>> Requesting improved review (with {self.final_review_model})...\n\n")
-        _, improved_feedback = self.feedback_improver_agent.analyze(improvement_data, self.final_review_model)
+        if self.final_review_model != "":
+            print(f"\n\n >>> Requesting improved review (with {self.final_review_model})...\n\n")
+            _, improved_feedback = self.feedback_improver_agent.analyze(improvement_data, self.final_review_model)
+        else:
+            print(f"\n\n >>> No final review model specified. Returning first review.\n\n")
+            improved_feedback = initial_reviews[0]
+
+        if self.skip_reasoning:
+            improved_feedback = remove_reasoning(improved_feedback)
 
         try:
             print(f"\n\nPosting improved feedback:\n{improved_feedback}\n\n")
-            pull_request.create_issue_comment(f"Code Review Feedback:\n\n{improved_feedback}")
+            pull_request.create_issue_comment(f"{improved_feedback}")
         except GithubException as e:
             print(f"GitHub API error: {e.status} - {e.data}")
         except Exception as e:
