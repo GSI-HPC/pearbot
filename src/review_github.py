@@ -10,8 +10,8 @@ import traceback
 from github import Github, GithubException
 from flask import Flask, request, abort
 
-from .ollama_utils import validate_models
-from .utils import remove_reasoning
+from ollama_utils import validate_models
+from utils import remove_reasoning
 
 class GitHubReviewer:
     def __init__(self, code_review_agent, feedback_improver_agent, initial_review_models, final_review_model, skip_reasoning: bool):

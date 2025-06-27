@@ -59,27 +59,26 @@ pytest tests/test_basic.py
 
 ### Running the Application
 
+Pearbot supports both execution methods for user convenience:
+
 ```bash
-# Run as GitHub App webhook server
+# Method 1: Direct script execution (simple and intuitive)
 python src/pearbot.py --server
-
-# Analyze local diff from file
 python src/pearbot.py --diff path/to/diff/file
-
-# Analyze diff from stdin
 git diff | python src/pearbot.py
+
+# Method 2: Module execution (Python best practice)
+python -m src.pearbot --server
+python -m src.pearbot --diff path/to/diff/file
+git diff | python -m src.pearbot
+
+# Other examples (both methods work)
+python src/pearbot.py --list-models
+python src/pearbot.py --model llama3.1 --prompt-style simple --initial-review-models "llama3.1,llama3.1,llama3.1"
+python src/pearbot.py --skip-reasoning
 
 # Generate format-patch and analyze
 git format-patch HEAD~3..HEAD --stdout | python src/pearbot.py
-
-# List available models
-python src/pearbot.py --list-models
-
-# Use specific model and prompt style
-python src/pearbot.py --model llama3.1 --prompt-style simple --initial-review-models "llama3.1,llama3.1,llama3.1"
-
-# Skip reasoning sections in output
-python src/pearbot.py --skip-reasoning
 ```
 
 ### Environment Configuration

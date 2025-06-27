@@ -1,15 +1,21 @@
 import argparse
 import sys
+from pathlib import Path
 
 from dotenv import load_dotenv
 
 load_dotenv()
 
-from .storage import get_or_create_session
-from .agents import Agent
-from .review_github import GitHubReviewer
-from .review_local import analyze_diff
-from .ollama_utils import get_available_models
+# Add src directory to path to support both script and module execution
+if str(Path(__file__).parent) not in sys.path:
+    sys.path.insert(0, str(Path(__file__).parent))
+
+# Now use simple imports that work both ways
+from storage import get_or_create_session
+from agents import Agent
+from review_github import GitHubReviewer
+from review_local import analyze_diff
+from ollama_utils import get_available_models
 
 def main():
     parser = argparse.ArgumentParser(description="Pearbot Code Review")

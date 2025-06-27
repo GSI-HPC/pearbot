@@ -1,7 +1,7 @@
 import ollama
 import yaml
 
-from .model import post_request_generate
+from model import post_request_generate
 
 class Agent:
     def __init__(self, role="code_reviewer", use_post_request=False, prompt_style="default"):
