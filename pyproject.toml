@@ -16,6 +16,11 @@ dependencies = [
     "pyyaml==6.0.1",
 ]
 
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0.0",
+]
+
 [project.urls]
 repository = "https://github.com/rbx/pearbot"
 

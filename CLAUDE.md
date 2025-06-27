@@ -38,8 +38,23 @@ Pearbot is an AI-powered code review tool that analyzes Pull Requests on GitHub 
 # Install dependencies
 pip install .
 
+# Install test dependencies
+pip install .[test]
+
 # Install Ollama model (default: llama3.1)
 ollama pull llama3.1
+```
+
+### Testing
+```bash
+# Run tests locally
+pytest
+
+# Run tests with verbose output
+pytest -v
+
+# Run specific test file
+pytest tests/test_basic.py
 ```
 
 ### Running the Application

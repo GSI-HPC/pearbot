@@ -5,11 +5,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from storage import get_or_create_session
-from agents import Agent
-from review_github import GitHubReviewer
-from review_local import analyze_diff
-from ollama_utils import get_available_models
+from .storage import get_or_create_session
+from .agents import Agent
+from .review_github import GitHubReviewer
+from .review_local import analyze_diff
+from .ollama_utils import get_available_models
 
 def main():
     parser = argparse.ArgumentParser(description="Pearbot Code Review")

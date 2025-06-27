@@ -4,8 +4,8 @@ import sys
 
 from colorama import Fore, Style
 
-from ollama_utils import validate_models
-from utils import remove_reasoning
+from .ollama_utils import validate_models
+from .utils import remove_reasoning
 
 def extract_commit_info(diff_content):
     commit_range = None
