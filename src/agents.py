@@ -4,21 +4,19 @@ import yaml
 from model import post_request_generate
 
 class Agent:
-    def __init__(self, model_name="llama3.1", role="code_reviewer", use_post_request=False, prompt_style="default"):
-        self.model_name = model_name
+    def __init__(self, role="code_reviewer", use_post_request=False, prompt_style="default"):
         self.role = role
         self.use_post_request = use_post_request
         self.prompt_style = prompt_style
         self.prompts = self._load_prompts()
-        print(f"Initialized agent with model: {model_name}, role: {role}, use_post_request: {use_post_request}, prompt_style: {prompt_style}")
+        print(f"Initialized agent with role: {role}, use_post_request: {use_post_request}, prompt_style: {prompt_style}")
 
     def _load_prompts(self):
         with open('src/prompts.yaml', 'r') as file:
             return yaml.safe_load(file)['prompts']
 
-    def analyze(self, data, model_name=None):
+    def analyze(self, data, model: str):
         prompt = self._prepare_prompt(data)
-        model = model_name or self.model_name
 
         # print(f"Prompt:\n{prompt}\nENDOFPROMPT")
 
